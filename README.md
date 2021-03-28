@@ -1,5 +1,6 @@
 # trabalho-redes
 
+Instalar coisas.  
 Duas classes cliente e servidor.  
 Uma comunicação básica.  
 Tudo via terminal.  
