@@ -48,24 +48,30 @@ class GuiClient extends JFrame {
 
     JFrame f = new JFrame(); // Criando o JFrame  
               
-    JButton buttonSend = new JButton("Enviar"); // Criando o botao de enviar
     JTextArea textArea = new JTextArea(); // Criando o campo de texto
+    JButton buttonSend = new JButton("Enviar"); // Criando o botao de enviar
+    JLabel labelIp = new JLabel("IP: "); // Criando o label do ip
     JTextField textFieldIp = new JTextField(); // Criando o campo de texto do ip
+    JLabel labelPort = new JLabel("Porta: "); // Criando o label da porta
     JTextField textFieldPort = new JTextField(); // Criando o campo de texto da porta
     JButton buttonConnect = new JButton("Conectar"); // Criando o botao de conexao
-    buttonSend.setBounds(130,100,100, 40); // Especificando x, y, width, height do botao de enviar
-    textArea.setBounds(130, 200, 200, 50); // Especificando x, y, width, height do campo de texto
-    textFieldIp.setBounds(300, 200, 100, 50); // Especificando x, y, width, height do campo de texto do ip
-    textFieldPort.setBounds(300, 300, 100, 50); // Especificando x, y, width, height do campo de texto da porta
-    buttonConnect.setBounds(300,  350, 100, 40); // Especificando x, y, width, height do botao de conexao
+    textArea.setBounds(10, 500, 280, 50); // Especificando x, y, width, height do campo de texto
+    buttonSend.setBounds(300, 500, 90, 45); // Especificando x, y, width, height do botao de enviar
+    labelIp.setBounds(300, 10, 90, 20); // Especificando x, y, width, height do label do ip
+    textFieldIp.setBounds(300, 40, 90, 50); // Especificando x, y, width, height do campo de texto do ip
+    labelPort.setBounds(300, 100, 90, 20); // Especificando x, y, width, height do label da porta
+    textFieldPort.setBounds(300, 130, 90, 50); // Especificando x, y, width, height do campo de texto da porta
+    buttonConnect.setBounds(300, 190, 90, 45); // Especificando x, y, width, height do botao de conexao
               
-    f.add(buttonSend); // Adicionando botao na tela
     f.add(textArea); // Adicionando campo de texto na tela
-    f.add(textFieldPort); // Adicionando campo de texto da porta na tela
+    f.add(buttonSend); // Adicionando botao na tela
+    f.add(labelIp); // Adicionando campo label do ip na tela
     f.add(textFieldIp); // Adicionando campo de texto do ip na tela
+    f.add(labelPort); // Adicionando campo label da porta na tela
+    f.add(textFieldPort); // Adicionando campo de texto da porta na tela
     f.add(buttonConnect); // Adicionando botao de conexao na tela
               
-    f.setSize(400,500); // Setando o tamanho da tela
+    f.setSize(400,600); // Setando o tamanho da tela
     f.setLayout(null); // Setando o layout
     f.setVisible(true); // Tornando a tela visivel
 

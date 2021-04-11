@@ -47,22 +47,25 @@ class GuiServer extends JFrame {
     boolean exit = false;
 
     JFrame f = new JFrame(); // Criando o JFrame  
-              
-    JButton buttonSend = new JButton("Enviar"); // Criando o botao de enviar
+
     JTextArea textArea = new JTextArea(); // Criando o campo de texto
+    JButton buttonSend = new JButton("Enviar"); // Criando o botao de enviar
+    JLabel labelPort = new JLabel("Porta: "); // Criando o label da porta
     JTextField textFieldPort = new JTextField(); // Criando o campo de texto da porta
     JButton buttonConnect = new JButton("Conectar"); // Criando o botao de conexao
-    buttonSend.setBounds(130,100,100, 40); // Especificando x, y, width, height do botao de enviar
-    textArea.setBounds(130, 200, 200, 50); // Especificando x, y, width, height do campo de texto
-    textFieldPort.setBounds(300, 200, 100, 50); // Especificando x, y, width, height do campo de texto da porta
-    buttonConnect.setBounds(300,  350, 100, 40); // Especificando x, y, width, height do botao de conexao
+    textArea.setBounds(10, 500, 280, 50); // Especificando x, y, width, height do campo de texto
+    buttonSend.setBounds(300, 500, 90, 45); // Especificando x, y, width, height do botao de enviar
+    labelPort.setBounds(300, 10, 90, 20); // Especificando x, y, width, height do label da porta
+    textFieldPort.setBounds(300, 40, 90, 50); // Especificando x, y, width, height do campo de texto da porta
+    buttonConnect.setBounds(300, 100, 90, 45); // Especificando x, y, width, height do botao de conexao
               
-    f.add(buttonSend); // Adicionando botoes na tela
     f.add(textArea); // Adicionando campo de texto na tela
+    f.add(buttonSend); // Adicionando botoes na tela
+    f.add(labelPort); // Adicionando campo label da porta na tela
     f.add(textFieldPort); // Adicionando campo de texto da porta na tela
     f.add(buttonConnect); // Adicionando botao de conexao na tela
               
-    f.setSize(400,500); // Setando o tamanho da tela
+    f.setSize(400,600); // Setando o tamanho da tela
     f.setLayout(null); // Setando o layout
     f.setVisible(true); // Tornando a tela visivel
 
