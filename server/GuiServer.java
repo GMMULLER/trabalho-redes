@@ -2,6 +2,9 @@ import java.io.*;
 import javax.swing.*;  
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.Color;
+import java.net.*;
+
 
 class ButtonHandlerSendMessageServer implements ActionListener {
   public JTextArea textArea;
@@ -48,19 +51,49 @@ class ButtonHandlerConnectServer implements ActionListener {
   }
 }
 
+class ButtonHandlerRecordAudio implements ActionListener {
+
+  public boolean recording = false;
+  public JButton button;
+  public AudioRecorder audioRecorder;
+
+  public ButtonHandlerRecordAudio(JButton button, AudioRecorder audioRecorder) {
+    this.button = button;
+    this.audioRecorder = audioRecorder;
+  }
+
+  // Trata o evento do botão
+  public void actionPerformed(ActionEvent event) {
+    this.recording = !this.recording;
+    if(this.recording){
+      this.button.setText("Gravando");
+      this.button.setBackground(Color.RED);
+      this.audioRecorder.start();
+    }else{
+      this.button.setText("Gravar");
+      this.button.setBackground(null);
+      this.audioRecorder.finish();
+    }
+  }
+}
+
 class GuiServer extends JFrame {  
   public static void main(String[] args) {  
     boolean exit = false;
 
     JFrame f = new JFrame(); // Criando o JFrame  
 
+    AudioRecorder audioRecorder = new AudioRecorder("audioServer");
+
     JTextArea textMessageArea = new JTextArea(); // Criando a area de mensagens
     JTextArea textArea = new JTextArea(); // Criando o campo de texto
+    JButton buttonRecord = new JButton("Gravar"); // Criando botao de gravacao de audio
     JButton buttonSend = new JButton("Enviar"); // Criando o botao de enviar
     JLabel labelPort = new JLabel("Porta: "); // Criando o label da porta
     JTextField textFieldPort = new JTextField(); // Criando o campo de texto da porta
     JButton buttonConnect = new JButton("Conectar"); // Criando o botao de conexao
 
+    buttonRecord.setBounds(300, 440, 90, 45); // Especificando x, y, width, height do botao de gravacao de audio
     textMessageArea.setBounds(10, 10, 280, 480); // Especificando x, y, width, height da area de mensagens
     textArea.setBounds(10, 500, 280, 50); // Especificando x, y, width, height do campo de texto
     buttonSend.setBounds(300, 500, 90, 45); // Especificando x, y, width, height do botao de enviar
@@ -71,6 +104,7 @@ class GuiServer extends JFrame {
     JScrollPane scrollPane = new JScrollPane(textMessageArea); // Criando scroll da area de mensagens
     textMessageArea.setEditable(false);
 
+    f.add(buttonRecord); // Adicionando botao de gravacao de audio na tela
     f.add(textMessageArea); // Adicionando area de mensagens na tela   
     f.add(textArea); // Adicionando campo de texto na tela
     f.add(buttonSend); // Adicionando botoes na tela
@@ -85,8 +119,10 @@ class GuiServer extends JFrame {
     Server server = new Server(); 
 
     ButtonHandlerConnectServer handlerConnect = new ButtonHandlerConnectServer(server, textFieldPort, textArea, buttonSend, textMessageArea);
+    ButtonHandlerRecordAudio handlerRecord = new ButtonHandlerRecordAudio(buttonRecord, audioRecorder);
 
     buttonConnect.addActionListener(handlerConnect);
+    buttonRecord.addActionListener(handlerRecord);
 
     while(server.in == null) {
       System.out.println("Conectando... Tenha paciência!!");
@@ -94,20 +130,66 @@ class GuiServer extends JFrame {
 
     String msgReceived = "";
 
-    while(true) {
-      try {
-        if ((msgReceived = server.in.readLine()) != null) {
-          if (msgReceived.equals("#")) {
-            server.out.println("#");
-            break;
+    try{
+      // Stream to receive data from the client through the socket.
+      DataInputStream dataInputStream = new DataInputStream(server.clientSocket.getInputStream());
+
+      while(true) {
+        try {
+          if ((msgReceived = server.in.readLine()) != null) {
+            if (msgReceived.equals("#")) {
+              server.out.println("#");
+              break;
+            }
+
+            textMessageArea.append("Outro: " + msgReceived + "\n");
           }
 
-          textMessageArea.append("Outro: " + msgReceived + "\n");
-          System.out.println(msgReceived);
+        } catch (IOException e) {
+          e.printStackTrace();
         }
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
-    } 
+
+        // try{
+
+        //   // Read the size of the file name so know when to stop reading.
+        //   int fileNameLength = dataInputStream.readInt();
+
+        //   System.out.println(fileNameLength);
+
+        //   // If the file exists
+        //   if (fileNameLength > 0) {
+        //       // Byte array to hold name of file.
+        //       byte[] fileNameBytes = new byte[fileNameLength];
+        //       // Read from the input stream into the byte array.
+        //       dataInputStream.readFully(fileNameBytes, 0, fileNameBytes.length);
+        //       // Create the file name from the byte array.
+        //       String fileName = new String(fileNameBytes);
+        //       // Read how much data to expect for the actual content of the file.
+        //       int fileContentLength = dataInputStream.readInt();
+
+        //       if (fileContentLength > 0) {
+        //           // Array to hold the file data.
+        //           byte[] fileContentBytes = new byte[fileContentLength];
+        //           // Read from the input stream into the fileContentBytes array.
+        //           dataInputStream.readFully(fileContentBytes, 0, fileContentBytes.length);
+                  
+        //           // Create the file with its name.
+        //           File fileToDownload = new File(fileName);
+        //           // Create a stream to write data to the file.
+        //           FileOutputStream fileOutputStream = new FileOutputStream(fileToDownload);
+        //           // Write the actual file data to the file.
+        //           fileOutputStream.write(fileContentBytes);
+        //           // Close the stream.
+        //           fileOutputStream.close();
+        //       }
+        //   }
+        // }catch(Exception e){
+        //     System.out.println("Erro: "+e.getMessage());
+        // }
+      } 
+
+    }catch(Exception e){
+      System.out.println(e.getMessage());
+    }
   }  
 }

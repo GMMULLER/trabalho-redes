@@ -2,6 +2,8 @@ import java.io.*;
 import javax.swing.*;  
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.Color;
+import java.net.*;
 
 class ButtonHandlerSendMessageClient implements ActionListener {
   public JTextArea textArea;
@@ -48,14 +50,75 @@ class ButtonHandlerConnectClient implements ActionListener {
   }
 }
 
+class ButtonHandlerRecordAudio implements ActionListener {
+
+  public boolean recording = false;
+  public JButton button;
+  public AudioRecorder audioRecorder;
+  public Socket socket;
+
+  public ButtonHandlerRecordAudio(JButton button, AudioRecorder audioRecorder, Socket socket) {
+    this.button = button;
+    this.audioRecorder = audioRecorder;
+    this.socket = socket;
+  }
+
+  // Trata o evento do botão
+  public void actionPerformed(ActionEvent event) {
+    this.recording = !this.recording;
+    if(this.recording){
+      this.button.setText("Gravando");
+      this.button.setBackground(Color.RED);
+      this.audioRecorder.start();
+    }else{
+      this.button.setText("Gravar");
+      this.button.setBackground(null);
+      this.audioRecorder.finish();
+      try{
+        String absolutePath = "/home/gustavo/code/redes/trabalho-redes/cliente/"+this.audioRecorder.fileName+Integer.toString(this.audioRecorder.countFileName-1)+".wav";
+
+        File file = new File(absolutePath);
+
+        // Create an input stream into the file you want to send.
+        FileInputStream fileInputStream = new FileInputStream(file.getAbsolutePath());
+
+        // Create an output stream to write to the server over the socket connection.
+        DataOutputStream dataOutputStream = new DataOutputStream(this.socket.getOutputStream());
+
+        String fileName = file.getName();
+        // Convert the name of the file into an array of bytes to be sent to the server.
+        byte[] fileNameBytes = fileName.getBytes();
+        // Create a byte array the size of the file so don't send too little or too much data to the server.
+        byte[] fileBytes = new byte[(int)file.length()];
+        // Put the contents of the file into the array of bytes to be sent so these bytes can be sent to the server.
+        fileInputStream.read(fileBytes);
+        // Send the length of the name of the file so server knows when to stop reading.
+        dataOutputStream.writeInt(fileNameBytes.length);
+        // Send the file name.
+        dataOutputStream.write(fileNameBytes);
+        // Send the length of the byte array so the server knows when to stop reading.
+        dataOutputStream.writeInt(fileBytes.length);
+        // Send the actual file.
+        dataOutputStream.write(fileBytes);
+      }catch(Exception e){
+        System.out.println(e.getMessage());
+      }
+
+    }
+  }
+}
+
 class GuiClient extends JFrame {  
   public static void main(String[] args) {  
     boolean exit = false;
 
     JFrame f = new JFrame(); // Criando o JFrame  
 
+    AudioRecorder audioRecorder = new AudioRecorder("audioCliente");
+
     JTextArea textMessageArea = new JTextArea(); // Criando a area de mensagens
     JTextArea textArea = new JTextArea(); // Criando o campo de texto
+    JButton buttonRecord = new JButton("Gravar"); // Criando botao de gravacao de audio
     JButton buttonSend = new JButton("Enviar"); // Criando o botao de enviar
     JLabel labelIp = new JLabel("IP: "); // Criando o label do ip
     JTextField textFieldIp = new JTextField(); // Criando o campo de texto do ip
@@ -63,6 +126,7 @@ class GuiClient extends JFrame {
     JTextField textFieldPort = new JTextField(); // Criando o campo de texto da porta
     JButton buttonConnect = new JButton("Conectar"); // Criando o botao de conexao
 
+    buttonRecord.setBounds(300, 440, 90, 45); // Especificando x, y, width, height do botao de gravacao de audio
     textMessageArea.setBounds(10, 10, 280, 480); // Especificando x, y, width, height da area de mensagens
     textArea.setBounds(10, 500, 280, 50); // Especificando x, y, width, height do campo de texto
     buttonSend.setBounds(300, 500, 90, 45); // Especificando x, y, width, height do botao de enviar
@@ -75,6 +139,7 @@ class GuiClient extends JFrame {
     JScrollPane scrollPane = new JScrollPane(textMessageArea); // Criando scroll da area de mensagens
     textMessageArea.setEditable(false);
 
+    f.add(buttonRecord); // Adicionando botao de gravacao de audio na tela
     f.add(textMessageArea); // Adicionando area de mensagens na tela
     f.add(textArea); // Adicionando campo de texto na tela
     f.add(buttonSend); // Adicionando botao na tela
@@ -98,6 +163,9 @@ class GuiClient extends JFrame {
       System.out.println("Conectando... Tenha paciência!!");
     }
 
+    ButtonHandlerRecordAudio handlerRecord = new ButtonHandlerRecordAudio(buttonRecord, audioRecorder, client.clientSocket);
+    buttonRecord.addActionListener(handlerRecord);
+
     String msgReceived = "";
 
     while(true) {
@@ -109,7 +177,6 @@ class GuiClient extends JFrame {
           }
 
           textMessageArea.append("Outro: " + msgReceived + "\n");
-          System.out.println(msgReceived);
         }
       } catch (IOException e) {
         e.printStackTrace();
