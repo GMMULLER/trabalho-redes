@@ -75,7 +75,7 @@ class ButtonHandlerRecordAudio implements ActionListener {
       this.button.setBackground(null);
       this.audioRecorder.finish();
       try{
-        String absolutePath = "/home/gustavo/code/redes/trabalho-redes/cliente/"+this.audioRecorder.fileName+Integer.toString(this.audioRecorder.countFileName-1)+".wav";
+        String absolutePath = "./"+this.audioRecorder.fileName+Integer.toString(this.audioRecorder.countFileName-1)+".wav";
 
         File file = new File(absolutePath);
 
