@@ -7,10 +7,10 @@ import java.net.*;
 
 class ButtonHandlerSendMessageClient implements ActionListener {
   public JTextArea textArea;
-  public PrintWriter out;
+  public DataOutputStream out;
   public JTextArea textMessageArea;
 
-  public ButtonHandlerSendMessageClient(JTextArea textArea, PrintWriter out, JTextArea textMessageArea) {
+  public ButtonHandlerSendMessageClient(JTextArea textArea, DataOutputStream out, JTextArea textMessageArea) {
     this.textArea = textArea;
     this.out = out;
     this.textMessageArea = textMessageArea;
@@ -18,7 +18,12 @@ class ButtonHandlerSendMessageClient implements ActionListener {
 
   // Trata o evento do botão
   public void actionPerformed(ActionEvent event) {
-    this.out.println(this.textArea.getText());
+    try {
+      this.out.writeInt(1);
+      this.out.writeUTF(this.textArea.getText());
+    } catch (Exception e) {
+      System.out.println("ERROR: " + e.getMessage());
+    }
     this.textMessageArea.append("Você: " + this.textArea.getText() + "\n");
     this.textArea.setText("");
   }
@@ -93,6 +98,7 @@ class ButtonHandlerRecordAudio implements ActionListener {
         // Put the contents of the file into the array of bytes to be sent so these bytes can be sent to the server.
         fileInputStream.read(fileBytes);
         // Send the length of the name of the file so server knows when to stop reading.
+        dataOutputStream.writeInt(2);
         dataOutputStream.writeInt(fileNameBytes.length);
         // Send the file name.
         dataOutputStream.write(fileNameBytes);
@@ -166,21 +172,53 @@ class GuiClient extends JFrame {
     ButtonHandlerRecordAudio handlerRecord = new ButtonHandlerRecordAudio(buttonRecord, audioRecorder, client.clientSocket);
     buttonRecord.addActionListener(handlerRecord);
 
-    String msgReceived = "";
+    try{
+      // Stream to receive data from the client through the socket.
+      DataInputStream dataInputStream = new DataInputStream(client.clientSocket.getInputStream());
 
-    while(true) {
-      try {
-        if ((msgReceived = client.in.readLine()) != null) {
-          if (msgReceived.equals("#")) {
-            client.out.println("#");
-            break;
+      while(true) {
+        // Read the size of the file name so know when to stop reading.
+        int messageType = dataInputStream.readInt();
+
+        if(messageType == 1) {
+          textMessageArea.append("Outro: " + dataInputStream.readUTF() + "\n");
+        } else {
+          int fileNameLength = dataInputStream.readInt();
+
+          System.out.println(fileNameLength);
+
+          // If the file exists
+          if (fileNameLength > 0) {
+            // Byte array to hold name of file.
+            byte[] fileNameBytes = new byte[fileNameLength];
+            // Read from the input stream into the byte array.
+            dataInputStream.readFully(fileNameBytes, 0, fileNameBytes.length);
+            // Create the file name from the byte array.
+            String fileName = new String(fileNameBytes);
+            System.out.println(fileName);
+            // Read how much data to expect for the actual content of the file.
+            int fileContentLength = dataInputStream.readInt();
+
+            if (fileContentLength > 0) {
+              // Array to hold the file data.
+              byte[] fileContentBytes = new byte[fileContentLength];
+              // Read from the input stream into the fileContentBytes array.
+              dataInputStream.readFully(fileContentBytes, 0, fileContentBytes.length);
+              
+              // Create the file with its name.
+              File fileToDownload = new File(fileName);
+              // Create a stream to write data to the file.
+              FileOutputStream fileOutputStream = new FileOutputStream(fileToDownload);
+              // Write the actual file data to the file.
+              fileOutputStream.write(fileContentBytes);
+              // Close the stream.
+              fileOutputStream.close();
+            }
           }
-
-          textMessageArea.append("Outro: " + msgReceived + "\n");
         }
-      } catch (IOException e) {
-        e.printStackTrace();
       }
-    } 
+    } catch(Exception e){
+      System.out.println("Erro: "+e.getMessage());
+    }
   }
 }

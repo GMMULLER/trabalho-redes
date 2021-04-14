@@ -2,9 +2,9 @@ import javax.sound.sampled.*;
 import java.io.*;
  
 public class AudioRecorder {
-    private int countFileName = 0;
-    private String fileName;
-    private File wavFile;
+    public int countFileName = 0;
+    public String fileName;
+    public File wavFile;
 
     public AudioRecorder(String fileName) {
       this.fileName = fileName;

@@ -4,7 +4,7 @@ import java.util.*;
 
 public class Client {
   public Socket clientSocket;
-  public PrintWriter out;
+  public DataOutputStream out;
   public BufferedReader in;
 
   public Client() {
@@ -19,7 +19,7 @@ public class Client {
     }
 
     try {
-      this.out = new PrintWriter(clientSocket.getOutputStream(), true);
+      this.out = new DataOutputStream(this.clientSocket.getOutputStream());
     } catch (IOException e) {
       e.printStackTrace();
     }

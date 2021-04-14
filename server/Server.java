@@ -5,7 +5,7 @@ import java.util.*;
 public class Server {
   public ServerSocket serverSocket;
   public Socket clientSocket;
-  public PrintWriter out;
+  public DataOutputStream out;
   public BufferedReader in;
 
   public Server() {
@@ -26,7 +26,7 @@ public class Server {
     }
 
     try {
-      this.out = new PrintWriter(clientSocket.getOutputStream(), true);
+      this.out = new DataOutputStream(this.clientSocket.getOutputStream());
     } catch (IOException e) {
       e.printStackTrace();
     }
