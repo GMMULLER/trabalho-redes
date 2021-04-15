@@ -1,17 +1,23 @@
 import java.io.*;
 import javax.swing.*;  
+import javax.swing.text.*;  
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.Color;
 import java.net.*;
 
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.UnsupportedAudioFileException;
 
 class ButtonHandlerSendMessageServer implements ActionListener {
   public JTextArea textArea;
   public DataOutputStream out;
-  public JTextArea textMessageArea;
+  public JTextPane textMessageArea;
 
-  public ButtonHandlerSendMessageServer(JTextArea textArea, DataOutputStream out, JTextArea textMessageArea) {
+  public ButtonHandlerSendMessageServer(JTextArea textArea, DataOutputStream out, JTextPane textMessageArea) {
     this.textArea = textArea;
     this.out = out;
     this.textMessageArea = textMessageArea;
@@ -25,8 +31,15 @@ class ButtonHandlerSendMessageServer implements ActionListener {
     } catch (Exception e) {
       System.out.println("ERROR: " + e.getMessage());
     }
-    this.textMessageArea.append("Você: " + this.textArea.getText() + "\n");
-    this.textArea.setText("");
+
+    try {
+      StyledDocument doc = this.textMessageArea.getStyledDocument();
+      SimpleAttributeSet attr = new SimpleAttributeSet();
+      doc.insertString(doc.getLength(), "Você: " + this.textArea.getText() + "\n", attr);
+      this.textArea.setText("");
+    } catch (Exception e) {
+      System.out.println("ERROR: " + e.getMessage());
+    }
   }
 }
 
@@ -36,9 +49,9 @@ class ButtonHandlerConnectServer implements ActionListener {
   public Server server;
   public JTextArea textArea;
   public JButton buttonSend;
-  public JTextArea textMessageArea;
+  public JTextPane textMessageArea;
 
-  public ButtonHandlerConnectServer(Server server, JTextField textFieldPort, JTextArea textArea, JButton buttonSend, JTextArea textMessageArea) {
+  public ButtonHandlerConnectServer(Server server, JTextField textFieldPort, JTextArea textArea, JButton buttonSend, JTextPane textMessageArea) {
     this.server = server;
     this.textFieldPort = textFieldPort;
     this.textArea = textArea;
@@ -62,11 +75,15 @@ class ButtonHandlerRecordAudio implements ActionListener {
   public JButton button;
   public AudioRecorder audioRecorder;
   public Socket socket;
+  public AudioPlayer audioPlayer;
+  public JTextPane textMessageArea;
 
-  public ButtonHandlerRecordAudio(JButton button, AudioRecorder audioRecorder, Socket socket) {
+  public ButtonHandlerRecordAudio(JButton button, AudioRecorder audioRecorder, Socket socket, JTextPane textMessageArea, AudioPlayer audioPlayer) {
     this.button = button;
     this.audioRecorder = audioRecorder;
     this.socket = socket;
+    this.audioPlayer = audioPlayer;
+    this.textMessageArea = textMessageArea;
   }
 
   // Trata o evento do botão
@@ -108,6 +125,20 @@ class ButtonHandlerRecordAudio implements ActionListener {
         dataOutputStream.writeInt(fileBytes.length);
         // Send the actual file.
         dataOutputStream.write(fileBytes);
+
+        try {
+          StyledDocument doc = this.textMessageArea.getStyledDocument();
+          SimpleAttributeSet attr = new SimpleAttributeSet();
+          doc.insertString(doc.getLength(), "Você: ", attr);
+          JButton buttonExecuteAudio = new JButton("Reproduzir");
+          ButtonHandlerReproduceAudio handlerReproduceAudio = new ButtonHandlerReproduceAudio(fileName, this.audioPlayer);
+          buttonExecuteAudio.addActionListener(handlerReproduceAudio);
+          this.textMessageArea.setCaretPosition(this.textMessageArea.getDocument().getLength());
+          this.textMessageArea.insertComponent(buttonExecuteAudio);
+          doc.insertString(doc.getLength(), "\n", attr);
+        } catch (Exception e) {
+          System.out.println("ERROR: " + e.getMessage());
+        }
       }catch(Exception e){
         System.out.println(e.getMessage());
       }
@@ -115,15 +146,32 @@ class ButtonHandlerRecordAudio implements ActionListener {
   }
 }
 
+class ButtonHandlerReproduceAudio implements ActionListener {
+  public String filename;
+  public AudioPlayer audioPlayer;
+
+  public ButtonHandlerReproduceAudio(String filename, AudioPlayer audioPlayer) {
+    this.filename = filename;
+    this.audioPlayer = audioPlayer;
+  }
+
+  // Trata o evento do botão
+  public void actionPerformed(ActionEvent event) {
+    // this.audioPlayer.setAudio();
+    this.audioPlayer.play(this.filename);
+  }
+}
+
 class GuiServer extends JFrame {  
   public static void main(String[] args) {  
+    AudioPlayer audioPlayer = new AudioPlayer();
     boolean exit = false;
 
     JFrame f = new JFrame(); // Criando o JFrame  
 
     AudioRecorder audioRecorder = new AudioRecorder("audioServer");
 
-    JTextArea textMessageArea = new JTextArea(); // Criando a area de mensagens
+    JTextPane textMessageArea = new JTextPane(); // Criando a area de mensagens
     JTextArea textArea = new JTextArea(); // Criando o campo de texto
     JButton buttonRecord = new JButton("Gravar"); // Criando botao de gravacao de audio
     JButton buttonSend = new JButton("Enviar"); // Criando o botao de enviar
@@ -164,19 +212,28 @@ class GuiServer extends JFrame {
       System.out.println("Conectando... Tenha paciência!!");
     }
 
-    ButtonHandlerRecordAudio handlerRecord = new ButtonHandlerRecordAudio(buttonRecord, audioRecorder, server.clientSocket);
+    ButtonHandlerRecordAudio handlerRecord = new ButtonHandlerRecordAudio(buttonRecord, audioRecorder, server.clientSocket, textMessageArea, audioPlayer);
     buttonRecord.addActionListener(handlerRecord);
 
     try{
       // Stream to receive data from the client through the socket.
       DataInputStream dataInputStream = new DataInputStream(server.clientSocket.getInputStream());
 
+      StyledDocument doc = textMessageArea.getStyledDocument();
+      SimpleAttributeSet attr = new SimpleAttributeSet();
       while(true) {
         // Read the size of the file name so know when to stop reading.
         int messageType = dataInputStream.readInt();
 
         if(messageType == 1) {
-          textMessageArea.append("Outro: " + dataInputStream.readUTF() + "\n");
+
+          try {
+            doc.insertString(doc.getLength(), "Outro: " + dataInputStream.readUTF() + "\n", attr);
+            textArea.setText("");
+          } catch (Exception e) {
+            System.out.println("ERROR: " + e.getMessage());
+          }
+
         } else {
           int fileNameLength = dataInputStream.readInt();
 
@@ -208,6 +265,19 @@ class GuiServer extends JFrame {
               fileOutputStream.write(fileContentBytes);
               // Close the stream.
               fileOutputStream.close();
+
+              try {
+                doc.insertString(doc.getLength(), "Outro: ", attr);
+                JButton buttonExecuteAudio = new JButton("Reproduzir");
+                ButtonHandlerReproduceAudio handlerReproduceAudio = new ButtonHandlerReproduceAudio(fileName, audioPlayer);
+                buttonExecuteAudio.addActionListener(handlerReproduceAudio);
+                textMessageArea.setCaretPosition(textMessageArea.getDocument().getLength());
+                textMessageArea.insertComponent(buttonExecuteAudio);
+                doc.insertString(doc.getLength(), "\n", attr);
+              } catch (Exception e) {
+                System.out.println("ERROR: " + e.getMessage());
+              }
+
             }
           }
         }
