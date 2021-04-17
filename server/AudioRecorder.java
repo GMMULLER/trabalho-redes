@@ -11,10 +11,10 @@ public class AudioRecorder {
       this.wavFile = new File("./"+fileName.toString() + Integer.toString(countFileName)+".wav");
     }
 
-    // Formato WAVE do arquivo de audio
+    // Definindo WAVE como formato de audio
     AudioFileFormat.Type fileType = AudioFileFormat.Type.WAVE;
  
-    // the line from which audio data is captured
+    // Linha de audio capturada por um dispositivo de audio
     TargetDataLine line;
  
     // Definindo configurações do audio
@@ -37,18 +37,18 @@ public class AudioRecorder {
                     AudioFormat format = getAudioFormat();
                     DataLine.Info info = new DataLine.Info(TargetDataLine.class, format);
         
-                    // checks if system supports the data line
                     if (!AudioSystem.isLineSupported(info)) {
-                        System.out.println("Line not supported");
+                        System.out.println("Linha não suportada");
                         System.exit(0);
                     }
                     line = (TargetDataLine) AudioSystem.getLine(info);
                     line.open(format);
-                    line.start();   // start capturing
+                    // Inicia a captura do audio
+                    line.start(); 
         
                     AudioInputStream ais = new AudioInputStream(line);
         
-                    // start recording
+                    // Começa a escrever no arquivo de audio
                     AudioSystem.write(ais, fileType, wavFile);
         
                 } catch (LineUnavailableException ex) {
@@ -60,7 +60,6 @@ public class AudioRecorder {
         });
 
         threadRecorder.start();
-
     }
  
     // Para a gravacao
@@ -68,8 +67,9 @@ public class AudioRecorder {
         line.stop();
         line.close();
 
-        this.countFileName++; // Incrementando contador do nome dos arquivos de audio
-        this.wavFile = new File("./"+this.fileName.toString() + Integer.toString(this.countFileName)+".wav"); // Fazendo reatribuição da instancia do arquivo para modificar o nome
-
+        // Incrementando contador do nome dos arquivos de audio
+        this.countFileName++; 
+        // Fazendo reatribuição da instancia do arquivo para modificar o nome
+        this.wavFile = new File("./"+this.fileName.toString() + Integer.toString(this.countFileName)+".wav");
     }
 }

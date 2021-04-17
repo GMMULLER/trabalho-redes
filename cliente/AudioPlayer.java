@@ -9,21 +9,11 @@ import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
 import javax.sound.sampled.UnsupportedAudioFileException;
  
-/**
- * This is an example program that demonstrates how to play back an audio file
- * using the SourceDataLine in Java Sound API.
- * @author www.codejava.net
- *
- */
 public class AudioPlayer {
- 
-    // size of the byte buffer used to read/write the audio stream
+    // Tamanho do buffer pra receber e enviar audio
     private static final int BUFFER_SIZE = 4096;
      
-    /**
-     * Play a given audio file.
-     * @param audioFilePath Path of the audio file.
-     */
+    // Roda o arquivo de audio passado como parametro
     void play(String audioFilePath) {
         File audioFile = new File(audioFilePath);
         try {
@@ -39,7 +29,7 @@ public class AudioPlayer {
  
             audioLine.start();
              
-            System.out.println("Playback started.");
+            System.out.println("Reproduzindo...");
              
             byte[] bytesBuffer = new byte[BUFFER_SIZE];
             int bytesRead = -1;
@@ -52,16 +42,16 @@ public class AudioPlayer {
             audioLine.close();
             audioStream.close();
              
-            System.out.println("Playback completed.");
+            System.out.println("Parando Reprodução.");
              
         } catch (UnsupportedAudioFileException ex) {
-            System.out.println("The specified audio file is not supported.");
+            System.out.println("Erro: " + ex.getMessage());
             ex.printStackTrace();
         } catch (LineUnavailableException ex) {
-            System.out.println("Audio line for playing back is unavailable.");
+            System.out.println("Erro: " + ex.getMessage());
             ex.printStackTrace();
         } catch (IOException ex) {
-            System.out.println("Error playing the audio file.");
+            System.out.println("Erro: " + ex.getMessage());
             ex.printStackTrace();
         }      
     }

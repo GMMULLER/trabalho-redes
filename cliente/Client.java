@@ -15,18 +15,21 @@ public class Client {
     try {
       this.clientSocket = new Socket(ip, port);
     } catch (IOException e) {
+      System.out.println("Erro: " + e.getMessage());
       e.printStackTrace();
     }
 
     try {
       this.out = new DataOutputStream(this.clientSocket.getOutputStream());
     } catch (IOException e) {
+      System.out.println("Erro: " + e.getMessage());
       e.printStackTrace();
     }
 
     try {
       this.in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
     } catch (IOException e) {
+      System.out.println("Erro: " + e.getMessage());
       e.printStackTrace();
     }
   }

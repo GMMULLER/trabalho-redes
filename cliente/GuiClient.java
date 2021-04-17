@@ -12,6 +12,7 @@ import javax.sound.sampled.Clip;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
 
+// Handler para o botao de envio da mensagem de texto
 class ButtonHandlerSendMessageClient implements ActionListener {
   public JTextArea textArea;
   public DataOutputStream out;
@@ -29,7 +30,8 @@ class ButtonHandlerSendMessageClient implements ActionListener {
       this.out.writeInt(1);
       this.out.writeUTF(this.textArea.getText());
     } catch (Exception e) {
-      System.out.println("ERROR: " + e.getMessage());
+      System.out.println("Erro: " + e.getMessage());
+      e.printStackTrace();
     }
 
     try {
@@ -38,11 +40,13 @@ class ButtonHandlerSendMessageClient implements ActionListener {
       doc.insertString(doc.getLength(), "Você: " + this.textArea.getText() + "\n", attr);
       this.textArea.setText("");
     } catch (Exception e) {
-      System.out.println("ERROR: " + e.getMessage());
+      System.out.println("Erro: " + e.getMessage());
+      e.printStackTrace();
     }
   }
 }
 
+// Handler para o botao de conexao do socket
 class ButtonHandlerConnectClient implements ActionListener {
   public Client client;
   public JTextField textFieldIp;
@@ -69,6 +73,7 @@ class ButtonHandlerConnectClient implements ActionListener {
   }
 }
 
+// Handler do botao para gravar audio
 class ButtonHandlerRecordAudio implements ActionListener {
 
   public boolean recording = false;
@@ -89,42 +94,45 @@ class ButtonHandlerRecordAudio implements ActionListener {
   // Trata o evento do botão
   public void actionPerformed(ActionEvent event) {
     this.recording = !this.recording;
-    if(this.recording){
+
+    if (this.recording) {
       this.button.setText("Gravando");
       this.button.setBackground(Color.RED);
       this.audioRecorder.start();
-    }else{
+    } else {
       this.button.setText("Gravar");
       this.button.setBackground(null);
       this.audioRecorder.finish();
-      try{
+
+      try {
         String absolutePath = "./"+this.audioRecorder.fileName+Integer.toString(this.audioRecorder.countFileName-1)+".wav";
 
         File file = new File(absolutePath);
 
-        // Create an input stream into the file you want to send.
+        // Criando a Stream de entrada do arquivo que sera enviado
         FileInputStream fileInputStream = new FileInputStream(file.getAbsolutePath());
 
-        // Create an output stream to write to the server over the socket connection.
+        // Criando a Stream de saida para enviar pelo socket
         DataOutputStream dataOutputStream = new DataOutputStream(this.socket.getOutputStream());
 
+        // Pegando as informações do arquivo para enviar...
         String fileName = file.getName();
-        // Convert the name of the file into an array of bytes to be sent to the server.
         byte[] fileNameBytes = fileName.getBytes();
-        // Create a byte array the size of the file so don't send too little or too much data to the server.
         byte[] fileBytes = new byte[(int)file.length()];
-        // Put the contents of the file into the array of bytes to be sent so these bytes can be sent to the server.
         fileInputStream.read(fileBytes);
-        // Send the length of the name of the file so server knows when to stop reading.
+        
+        // Enviando para a outra ponta da conexao que o tipo da mensagem eh de audio        
         dataOutputStream.writeInt(2);
+        // Enviando tamanho do nome do arquivo
         dataOutputStream.writeInt(fileNameBytes.length);
-        // Send the file name.
+        // Enviando o nome do arquivo
         dataOutputStream.write(fileNameBytes);
-        // Send the length of the byte array so the server knows when to stop reading.
+        // Enviando o tamanho do arquivo
         dataOutputStream.writeInt(fileBytes.length);
-        // Send the actual file.
+        // Enviando o arquivo de audio
         dataOutputStream.write(fileBytes);
 
+        // Adicionando botão para reproducao do audio
         try {
           StyledDocument doc = this.textMessageArea.getStyledDocument();
           SimpleAttributeSet attr = new SimpleAttributeSet();
@@ -136,16 +144,19 @@ class ButtonHandlerRecordAudio implements ActionListener {
           this.textMessageArea.insertComponent(buttonExecuteAudio);
           doc.insertString(doc.getLength(), "\n", attr);
         } catch (Exception e) {
-          System.out.println("ERROR: " + e.getMessage());
+          System.out.println("Erro: " + e.getMessage());
+          e.printStackTrace();
         }
-      }catch(Exception e){
-        System.out.println(e.getMessage());
+      } catch (Exception e) {
+        System.out.println("Erro: " + e.getMessage());
+        e.printStackTrace();
       }
 
     }
   }
 }
 
+// Handler do botao de reproducao de audio
 class ButtonHandlerReproduceAudio implements ActionListener {
   public String filename;
   public AudioPlayer audioPlayer;
@@ -157,11 +168,11 @@ class ButtonHandlerReproduceAudio implements ActionListener {
 
   // Trata o evento do botão
   public void actionPerformed(ActionEvent event) {
-    // this.audioPlayer.setAudio();
     this.audioPlayer.play(this.filename);
   }
 }
 
+// Interface grafica do cliente
 class GuiClient extends JFrame {  
   public static void main(String[] args) {  
     AudioPlayer audioPlayer = new AudioPlayer();
@@ -222,54 +233,47 @@ class GuiClient extends JFrame {
     buttonRecord.addActionListener(handlerRecord);
 
     try{
-      // Stream to receive data from the client through the socket.
+      // Stream de troca de dados entre os dados via socket
       DataInputStream dataInputStream = new DataInputStream(client.clientSocket.getInputStream());
 
       StyledDocument doc = textMessageArea.getStyledDocument();
       SimpleAttributeSet attr = new SimpleAttributeSet();
-      while(true) {
-        // Read the size of the file name so know when to stop reading.
+      while (true) {
+        // Faz a leitura do tipo da mensagem
         int messageType = dataInputStream.readInt();
 
+        // Se a mensagem for do tipo 1, é do tipo texto
         if(messageType == 1) {
           try {
             doc.insertString(doc.getLength(), "Outro: " + dataInputStream.readUTF() + "\n", attr);
             textArea.setText("");
           } catch (Exception e) {
-            System.out.println("ERROR: " + e.getMessage());
+            System.out.println("Erro: " + e.getMessage());
+            e.printStackTrace();
           }
         } else {
+          // Descobre o tamanho do nome do arquivo
           int fileNameLength = dataInputStream.readInt();
 
-          System.out.println(fileNameLength);
-
-          // If the file exists
           if (fileNameLength > 0) {
-            // Byte array to hold name of file.
+            // Lendo nome do arquivo
             byte[] fileNameBytes = new byte[fileNameLength];
-            // Read from the input stream into the byte array.
             dataInputStream.readFully(fileNameBytes, 0, fileNameBytes.length);
-            // Create the file name from the byte array.
             String fileName = new String(fileNameBytes);
-            System.out.println(fileName);
-            // Read how much data to expect for the actual content of the file.
-            int fileContentLength = dataInputStream.readInt();
 
+            // Lendo conteudo do arquivo
+            int fileContentLength = dataInputStream.readInt();
             if (fileContentLength > 0) {
-              // Array to hold the file data.
               byte[] fileContentBytes = new byte[fileContentLength];
-              // Read from the input stream into the fileContentBytes array.
               dataInputStream.readFully(fileContentBytes, 0, fileContentBytes.length);
               
-              // Create the file with its name.
+              // Salvando os valores lidos no arquivo
               File fileToDownload = new File(fileName);
-              // Create a stream to write data to the file.
               FileOutputStream fileOutputStream = new FileOutputStream(fileToDownload);
-              // Write the actual file data to the file.
               fileOutputStream.write(fileContentBytes);
-              // Close the stream.
               fileOutputStream.close();
-
+              
+              // Adiciona o botao de execução do audio
               try {
                 doc.insertString(doc.getLength(), "Outro: ", attr);
                 JButton buttonExecuteAudio = new JButton("Reproduzir");
@@ -279,7 +283,8 @@ class GuiClient extends JFrame {
                 textMessageArea.insertComponent(buttonExecuteAudio);
                 doc.insertString(doc.getLength(), "\n", attr);
               } catch (Exception e) {
-                System.out.println("ERROR: " + e.getMessage());
+                System.out.println("Erro: " + e.getMessage());
+                e.printStackTrace();
               }
 
             }
@@ -287,7 +292,8 @@ class GuiClient extends JFrame {
         }
       }
     } catch(Exception e){
-      System.out.println("Erro: "+e.getMessage());
+      System.out.println("Erro: " + e.getMessage());
+      e.printStackTrace();
     }
   }
 }
