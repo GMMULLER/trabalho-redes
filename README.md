@@ -16,3 +16,8 @@ API de concorrência: service e task
 Maven repository:  
 
 https://mvnrepository.com/  
+
+TODO:
+
+quando fechar a interface parar a thread principal e fechar conexao
+testar execucao em outros sistemas operacionais

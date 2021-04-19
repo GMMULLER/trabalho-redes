@@ -35,26 +35,30 @@ public class AudioRecorder {
             public void run() {
                 try {
                     AudioFormat format = getAudioFormat();
+
+                    // Guarda informacoes do feed de audio como: formato de audio suportado e tamanho do buffer interno
                     DataLine.Info info = new DataLine.Info(TargetDataLine.class, format);
         
                     if (!AudioSystem.isLineSupported(info)) {
                         System.out.println("Linha não suportada");
                         System.exit(0);
                     }
+
                     line = (TargetDataLine) AudioSystem.getLine(info);
+
+                    // Abre a linha com um formato especifico, alocando recursos de sistema
                     line.open(format);
-                    // Inicia a captura do audio
+
+                    // Permite a linha fazer operacoes de I/O
                     line.start(); 
         
                     AudioInputStream ais = new AudioInputStream(line);
         
-                    // Começa a escrever no arquivo de audio
+                    // Comeca a escrever no arquivo de audio
                     AudioSystem.write(ais, fileType, wavFile);
         
-                } catch (LineUnavailableException ex) {
+                } catch (LineUnavailableException | IOException ex) {
                     ex.printStackTrace();
-                } catch (IOException ioe) {
-                    ioe.printStackTrace();
                 }
             }
         });

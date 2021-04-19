@@ -12,171 +12,29 @@ import javax.sound.sampled.Clip;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
 
-// Handler para o botao de envio da mensagem de texto
-class ButtonHandlerSendMessageClient implements ActionListener {
-  public JTextArea textArea;
-  public DataOutputStream out;
-  public JTextPane textMessageArea;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-  public ButtonHandlerSendMessageClient(JTextArea textArea, DataOutputStream out, JTextPane textMessageArea) {
-    this.textArea = textArea;
-    this.out = out;
-    this.textMessageArea = textMessageArea;
-  }
-
-  // Trata o evento do botão
-  public void actionPerformed(ActionEvent event) {
-    try {
-      this.out.writeInt(1);
-      this.out.writeUTF(this.textArea.getText());
-    } catch (Exception e) {
-      System.out.println("Erro: " + e.getMessage());
-      e.printStackTrace();
-    }
-
-    try {
-      StyledDocument doc = this.textMessageArea.getStyledDocument();
-      SimpleAttributeSet attr = new SimpleAttributeSet();
-      doc.insertString(doc.getLength(), "Você: " + this.textArea.getText() + "\n", attr);
-      this.textArea.setText("");
-    } catch (Exception e) {
-      System.out.println("Erro: " + e.getMessage());
-      e.printStackTrace();
-    }
-  }
-}
-
-// Handler para o botao de conexao do socket
-class ButtonHandlerConnectClient implements ActionListener {
-  public Client client;
-  public JTextField textFieldIp;
-  public JTextField textFieldPort;
-  public JTextArea textArea;
-  public JButton buttonSend;
-  public JTextPane textMessageArea;
-
-  public ButtonHandlerConnectClient(Client client, JTextField textFieldIp, JTextField textFieldPort, JTextArea textArea, JButton buttonSend, JTextPane textMessageArea) {
-    this.client = client;
-    this.textFieldIp = textFieldIp;
-    this.textFieldPort = textFieldPort;
-    this.textArea = textArea;
-    this.buttonSend = buttonSend;
-    this.textMessageArea = textMessageArea;
-  }
-
-  // Trata o evento do botão
-  public void actionPerformed(ActionEvent event) {
-    client.connect(this.textFieldIp.getText(), Integer.parseInt(this.textFieldPort.getText()));
-
-    ButtonHandlerSendMessageClient handlerSendMessage = new ButtonHandlerSendMessageClient(this.textArea, this.client.out, this.textMessageArea);
-    this.buttonSend.addActionListener(handlerSendMessage);
-  }
-}
-
-// Handler do botao para gravar audio
-class ButtonHandlerRecordAudio implements ActionListener {
-
-  public boolean recording = false;
-  public JButton button;
-  public AudioRecorder audioRecorder;
-  public Socket socket;
-  public AudioPlayer audioPlayer;
-  public JTextPane textMessageArea;
-
-  public ButtonHandlerRecordAudio(JButton button, AudioRecorder audioRecorder, Socket socket, JTextPane textMessageArea, AudioPlayer audioPlayer) {
-    this.button = button;
-    this.audioRecorder = audioRecorder;
-    this.socket = socket;
-    this.audioPlayer = audioPlayer;
-    this.textMessageArea = textMessageArea;
-  }
-
-  // Trata o evento do botão
-  public void actionPerformed(ActionEvent event) {
-    this.recording = !this.recording;
-
-    if (this.recording) {
-      this.button.setText("Gravando");
-      this.button.setBackground(Color.RED);
-      this.audioRecorder.start();
-    } else {
-      this.button.setText("Gravar");
-      this.button.setBackground(null);
-      this.audioRecorder.finish();
-
-      try {
-        String absolutePath = "./"+this.audioRecorder.fileName+Integer.toString(this.audioRecorder.countFileName-1)+".wav";
-
-        File file = new File(absolutePath);
-
-        // Criando a Stream de entrada do arquivo que sera enviado
-        FileInputStream fileInputStream = new FileInputStream(file.getAbsolutePath());
-
-        // Criando a Stream de saida para enviar pelo socket
-        DataOutputStream dataOutputStream = new DataOutputStream(this.socket.getOutputStream());
-
-        // Pegando as informações do arquivo para enviar...
-        String fileName = file.getName();
-        byte[] fileNameBytes = fileName.getBytes();
-        byte[] fileBytes = new byte[(int)file.length()];
-        fileInputStream.read(fileBytes);
-        
-        // Enviando para a outra ponta da conexao que o tipo da mensagem eh de audio        
-        dataOutputStream.writeInt(2);
-        // Enviando tamanho do nome do arquivo
-        dataOutputStream.writeInt(fileNameBytes.length);
-        // Enviando o nome do arquivo
-        dataOutputStream.write(fileNameBytes);
-        // Enviando o tamanho do arquivo
-        dataOutputStream.writeInt(fileBytes.length);
-        // Enviando o arquivo de audio
-        dataOutputStream.write(fileBytes);
-
-        // Adicionando botão para reproducao do audio
-        try {
-          StyledDocument doc = this.textMessageArea.getStyledDocument();
-          SimpleAttributeSet attr = new SimpleAttributeSet();
-          doc.insertString(doc.getLength(), "Você: ", attr);
-          JButton buttonExecuteAudio = new JButton("Reproduzir");
-          ButtonHandlerReproduceAudio handlerReproduceAudio = new ButtonHandlerReproduceAudio(fileName, this.audioPlayer);
-          buttonExecuteAudio.addActionListener(handlerReproduceAudio);
-          this.textMessageArea.setCaretPosition(this.textMessageArea.getDocument().getLength());
-          this.textMessageArea.insertComponent(buttonExecuteAudio);
-          doc.insertString(doc.getLength(), "\n", attr);
-        } catch (Exception e) {
-          System.out.println("Erro: " + e.getMessage());
-          e.printStackTrace();
-        }
-      } catch (Exception e) {
-        System.out.println("Erro: " + e.getMessage());
-        e.printStackTrace();
-      }
-
-    }
-  }
-}
-
-// Handler do botao de reproducao de audio
-class ButtonHandlerReproduceAudio implements ActionListener {
-  public String filename;
-  public AudioPlayer audioPlayer;
-
-  public ButtonHandlerReproduceAudio(String filename, AudioPlayer audioPlayer) {
-    this.filename = filename;
-    this.audioPlayer = audioPlayer;
-  }
-
-  // Trata o evento do botão
-  public void actionPerformed(ActionEvent event) {
-    this.audioPlayer.play(this.filename);
-  }
-}
+import handler.*;
+import audio.*;
 
 // Interface grafica do cliente
 class GuiClient extends JFrame {  
+
+  // private static volatile boolean exit = false; 
+
   public static void main(String[] args) {  
+
+    // Exclui todos os arquivos residuais de audio da ultima execucao
+    File folder = new File("./");
+    File fList[] = folder.listFiles();
+
+    for (File f : fList) {
+      if (f.getName().endsWith(".wav")) {
+        f.delete(); 
+      }
+    }
+    
     AudioPlayer audioPlayer = new AudioPlayer();
-    boolean exit = false;
 
     JFrame f = new JFrame(); // Criando o JFrame  
 
@@ -225,22 +83,58 @@ class GuiClient extends JFrame {
 
     buttonConnect.addActionListener(handlerConnect);
 
+    // final boolean exit = false;
+    AtomicBoolean exit = new AtomicBoolean(false);
+
+    f.addWindowListener(new java.awt.event.WindowAdapter(){
+      @Override
+      public void windowClosing(java.awt.event.WindowEvent windowEvent){
+        if(client.out != null){
+          try{
+            client.out.writeInt(3);
+          }catch(IOException e){
+            System.out.println("Erro: " + e.getMessage());
+            e.printStackTrace();
+          }
+        }
+        // exit.set(true);
+        System.exit(0);
+      }
+    });
+
+    boolean printConnectionMsg = true;
+
     while(client.in == null) {
-      System.out.println("Conectando... Tenha paciência!!");
+      if(printConnectionMsg){
+        System.out.println("Aguardando conexão...");
+        printConnectionMsg = false;
+      }
+      System.out.print("");
+      // if(exit.get()){
+      //   System.exit(0);
+      // }
     }
+    System.out.println("Conexão estabelecida!");
 
     ButtonHandlerRecordAudio handlerRecord = new ButtonHandlerRecordAudio(buttonRecord, audioRecorder, client.clientSocket, textMessageArea, audioPlayer);
     buttonRecord.addActionListener(handlerRecord);
 
     try{
+
       // Stream de troca de dados entre os dados via socket
       DataInputStream dataInputStream = new DataInputStream(client.clientSocket.getInputStream());
 
       StyledDocument doc = textMessageArea.getStyledDocument();
       SimpleAttributeSet attr = new SimpleAttributeSet();
+
       while (true) {
+
         // Faz a leitura do tipo da mensagem
         int messageType = dataInputStream.readInt();
+
+        if(messageType == 3){
+          System.exit(0);
+        }
 
         // Se a mensagem for do tipo 1, é do tipo texto
         if(messageType == 1) {
@@ -264,6 +158,7 @@ class GuiClient extends JFrame {
             // Lendo conteudo do arquivo
             int fileContentLength = dataInputStream.readInt();
             if (fileContentLength > 0) {
+
               byte[] fileContentBytes = new byte[fileContentLength];
               dataInputStream.readFully(fileContentBytes, 0, fileContentBytes.length);
               
@@ -275,13 +170,17 @@ class GuiClient extends JFrame {
               
               // Adiciona o botao de execução do audio
               try {
+
                 doc.insertString(doc.getLength(), "Outro: ", attr);
+
                 JButton buttonExecuteAudio = new JButton("Reproduzir");
                 ButtonHandlerReproduceAudio handlerReproduceAudio = new ButtonHandlerReproduceAudio(fileName, audioPlayer);
                 buttonExecuteAudio.addActionListener(handlerReproduceAudio);
+
                 textMessageArea.setCaretPosition(textMessageArea.getDocument().getLength());
                 textMessageArea.insertComponent(buttonExecuteAudio);
                 doc.insertString(doc.getLength(), "\n", attr);
+
               } catch (Exception e) {
                 System.out.println("Erro: " + e.getMessage());
                 e.printStackTrace();
