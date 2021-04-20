@@ -1,3 +1,5 @@
+package handler;
+
 import java.io.*;
 import javax.swing.*; 
 import javax.swing.text.*;   
@@ -5,7 +7,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 // Handler para o botao de envio da mensagem de texto
-class ButtonHandlerSendMessageServer implements ActionListener {
+public class ButtonHandlerSendMessageServer implements ActionListener {
   public JTextArea textArea;
   public DataOutputStream out;
   public JTextPane textMessageArea;

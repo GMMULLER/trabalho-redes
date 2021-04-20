@@ -1,3 +1,5 @@
+package audio;
+
 import java.io.File;
 import java.io.IOException;
  
@@ -14,7 +16,7 @@ public class AudioPlayer {
     private static final int BUFFER_SIZE = 4096;
      
     // Roda o arquivo de audio passado como argumento
-    void play(String audioFilePath) {
+    public void play(String audioFilePath) {
 
         File audioFile = new File(audioFilePath);
         

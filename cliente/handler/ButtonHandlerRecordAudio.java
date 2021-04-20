@@ -1,3 +1,5 @@
+package handler;
+
 import java.io.*;
 import javax.swing.*; 
 import javax.swing.text.*;   
@@ -9,7 +11,7 @@ import java.net.*;
 import audio.*;
 
 // Handler do botao para gravar audio
-class ButtonHandlerRecordAudio implements ActionListener {
+public class ButtonHandlerRecordAudio implements ActionListener {
 
   public boolean recording = false;
   public JButton button;

@@ -1,19 +1,29 @@
+package main;
+
 import java.net.*;
 import java.io.*;
 import java.util.*;
 
-public class Client {
+public class Server {
+  public ServerSocket serverSocket;
   public Socket clientSocket;
   public DataOutputStream out;
   public BufferedReader in;
 
-  public Client() {
+  public Server() {
     this.in = null;
   }
 
-  public void connect(String ip, int port) {
+  public void connect(int port) {
     try {
-      this.clientSocket = new Socket(ip, port);
+      this.serverSocket = new ServerSocket(port);
+    } catch (IOException e) {
+      System.out.println("Erro: " + e.getMessage());
+      e.printStackTrace();
+    }
+
+    try {
+      this.clientSocket = serverSocket.accept();
     } catch (IOException e) {
       System.out.println("Erro: " + e.getMessage());
       e.printStackTrace();

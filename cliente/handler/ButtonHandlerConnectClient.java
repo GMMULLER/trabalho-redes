@@ -1,10 +1,14 @@
+package handler;
+
 import javax.swing.*; 
 import javax.swing.text.*;   
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import main.Client;
+
 // Handler para o botao de conexao do socket
-class ButtonHandlerConnectClient implements ActionListener {
+public class ButtonHandlerConnectClient implements ActionListener {
   public Client client;
   public JTextField textFieldIp;
   public JTextField textFieldPort;

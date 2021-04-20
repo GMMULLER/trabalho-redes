@@ -1,3 +1,5 @@
+package audio;
+
 import javax.sound.sampled.*;
 import java.io.*;
  
@@ -30,7 +32,7 @@ public class AudioRecorder {
     }
  
     // Inicia a gravacao
-    void start() {
+    public void start() {
         Thread threadRecorder = new Thread(new Runnable() {
             public void run() {
                 try {
@@ -63,7 +65,7 @@ public class AudioRecorder {
     }
  
     // Para a gravacao
-    void finish() {
+    public void finish() {
         line.stop();
         line.close();
 

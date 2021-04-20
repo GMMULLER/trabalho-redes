@@ -1,10 +1,12 @@
+package handler;
+
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 import audio.*;
 
 // Handler do botao de reproducao de audio
-class ButtonHandlerReproduceAudio implements ActionListener {
+public class ButtonHandlerReproduceAudio implements ActionListener {
   public String filename;
   public AudioPlayer audioPlayer;
 
