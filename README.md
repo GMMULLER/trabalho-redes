@@ -1,4 +1,4 @@
-# trabalho-redes
+# Chat Usando TCP
 
 Pré-Requisito  
 - Instalar Java JDK
