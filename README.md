@@ -1,23 +1,16 @@
 # trabalho-redes
 
-Instalar coisas.  
-Duas classes cliente e servidor.  
-Uma comunicação básica.  
-Tudo via terminal.  
+Pré-Requisito  
+- Instalar Java JDK
+- Sistema Operacional Linux ou Windows
 
-Tutoriais:
+Execução
+- Navegar para a pasta cliente
+- Compilar utilizando `javac main/GuiClient.java`
+- E rodar com `java main.GuiClient` ou `java main/GuiClient`
+- Navegar para a pasta server
+- Compilar utilizando `javac main/GuiServer.java`
+- E rodar com `java main.GuiServer` ou `java main/GuiServer`
 
-https://www.baeldung.com/a-guide-to-java-sockets  
-https://www.devmedia.com.br/java-sockets-criando-comunicacoes-em-java/9465  
-https://www.codejava.net/java-se/networking/java-socket-client-examples-tcp-ip  
-
-API de concorrência: service e task  
-
-Maven repository:  
-
-https://mvnrepository.com/  
-
-TODO:
-
-quando fechar a interface parar a thread principal e fechar conexao
-testar execucao em outros sistemas operacionais
+Observações
+- Quando você fecha uma das janelas (cliente ou servidor) com a conexão estabelecida entre as duas, ambas serão fechadas e a conexão encerrada.
